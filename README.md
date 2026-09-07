@@ -6,58 +6,72 @@ cloning/opening it yourself.
 
 ## How it works
 
-A Tampermonkey userscript injects an "Open in JetBrains IDE" button into the
-GitLab UI. Clicking it navigates to a custom `jb://` URL, which Windows routes
-to a local PowerShell script via a registry-registered protocol handler. That
-script takes care of opening (or cloning and opening) the project in the
-appropriate JetBrains IDE.
+A browser extension (or, alternatively, a Tampermonkey userscript) injects an
+"Open in JetBrains IDE" button into the GitLab UI. Clicking it navigates to a
+custom `jb://` URL, which Windows routes to a local PowerShell script via a
+registry-registered protocol handler. That script takes care of opening (or
+cloning and opening) the project in the appropriate JetBrains IDE.
 
 ## Requirements
 
 - Windows
-- [Tampermonkey](https://www.tampermonkey.net/) (or a similar userscript
-  manager) installed in your browser
+- Chrome/Edge (for the `chrome-extension/` extension), or
+  [Tampermonkey](https://www.tampermonkey.net/) (or a similar userscript
+  manager) if you'd rather use `jb-cloner.user.js` instead
 
 ## Setup
 
-### 1. Install the handler script
+### 1. Run the installer
 
-1. Copy `jb-protocol-handler.ps1` to a permanent folder on your machine
-   (e.g. `C:\Tools\jb-protocol-handler.ps1`).
-2. Open it and, at the top of the file, fill in the exe path variable(s) for
-   any JetBrains IDE that isn't auto-detected on your machine (`$WebStormExePath`,
-   `$RiderExePath`, `$PhpStormExePath`, `$PyCharmExePath`, `$IdeaExePath`).
-   Leave a variable as `""` to rely on auto-detection.
+1. Clone/download this repo somewhere on disk.
+2. Run:
+   ```
+   powershell -ExecutionPolicy Bypass -File .\install.ps1
+   ```
+   No admin rights are required. This copies `jb-protocol-handler.ps1` to
+   `%LOCALAPPDATA%\jb-protocol-handler\jb-protocol-handler.ps1` and registers
+   the `jb://` protocol in `HKCU` to point at it — no manual editing or
+   separate registration step needed.
+3. (Optional) If a JetBrains IDE isn't auto-detected on your machine, edit the
+   exe path variable(s) at the top of the **installed** copy at
+   `%LOCALAPPDATA%\jb-protocol-handler\jb-protocol-handler.ps1`
+   (`$WebStormExePath`, `$RiderExePath`, `$PhpStormExePath`, `$PyCharmExePath`,
+   `$IdeaExePath`). Leave a variable as `""` to rely on auto-detection.
 
-### 2. Register the `jb://` protocol handler
+### 2. Install the browser extension
 
-1. Open `register-jb-protocol.ps1`.
-2. Set the `$HandlerScriptPath` variable at the top to the full path where
-   you saved `jb-protocol-handler.ps1` in step 1.
-3. Run the script (e.g. right-click → *Run with PowerShell*, or
-   `powershell -ExecutionPolicy Bypass -File .\register-jb-protocol.ps1`).
-   No admin rights are required; it only writes to `HKCU`.
-4. You should see `jb:// protocol registered, pointing to '<your path>'.`
+1. Open `chrome://extensions` (or `edge://extensions`) and enable
+   **Developer mode**.
+2. Click **Load unpacked** and select the `chrome-extension/` folder from
+   this repo.
+3. Click the extension's icon (or its "Details" → **Extension options**) to
+   open its settings page, then set:
+   - **GitLab domain** — your GitLab host, e.g. `gitlab.mycompany.com`.
+   - **Projects root directory** — the local folder where you keep
+     checked-out projects (forward slashes, e.g. `C:/Users/you/Projects`).
+   - **Enabled IDE buttons** — which IDEs to show buttons for.
+4. Click **Save** and grant the permission prompt for your GitLab domain.
+5. Reload any open GitLab tabs.
 
-### 3. Install the userscript
+> Prefer Tampermonkey instead? Use `jb-cloner.user.js`: create a new script
+> in Tampermonkey, paste its contents, then edit `@match` (your GitLab
+> domain), `PROJECTS_BASE_PATH`, and `ENABLED_IDES` at the top before saving.
 
-1. Install [Tampermonkey](https://www.tampermonkey.net/) (or a similar
-   userscript manager) in your browser.
-2. Open Tampermonkey's dashboard → **Create a new script**, then replace the
-   contents with `jb-cloner.user.js`.
-3. In the script, update:
-   - `@match` to point at your GitLab domain.
-   - `PROJECTS_BASE_PATH` to the local folder where you keep checked-out
-     projects.
-   - `ENABLED_IDES` to the list of IDE buttons you want shown (from
-     `IDE_TYPES`: `WS`, `RD`, `PS`, `PC`, `IJ`).
-4. Save the script.
-
-### 4. Try it out
+### 3. Try it out
 
 1. Open any project page on your GitLab instance.
-2. You should see one button per entry in `ENABLED_IDES` next to the clone
-   button.
+2. You should see one button per enabled IDE next to the clone button.
 3. Click one — Windows should prompt to open the `jb://` link (first time
    only), then launch the matching JetBrains IDE on the project, cloning it
    first if it isn't already checked out locally.
+
+## Uninstall
+
+To remove the `jb://` protocol registration and the installed handler script:
+```
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Uninstall
+```
+Then remove the browser extension from `chrome://extensions` (or remove the
+Tampermonkey userscript) if you no longer want the "Open in JetBrains IDE"
+button on GitLab.
+

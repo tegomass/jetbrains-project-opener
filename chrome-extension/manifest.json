@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "GitLab JetBrains Opener",
+  "version": "1.0.0",
+  "description": "Adds an \"Open in JetBrains IDE\" button to GitLab project pages, using a local jb:// protocol handler.",
+  "permissions": ["storage", "scripting"],
+  "optional_host_permissions": ["*://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html",
+  "action": {
+    "default_title": "GitLab JetBrains Opener settings",
+    "default_popup": "options.html"
+  }
+}
