@@ -1,4 +1,5 @@
 const IDE_TYPES = {
+  VSC: { protocol: "vscode", label: "VS Code" },
   WS: { protocol: "webstorm", label: "WebStorm (WS)" },
   RD: { protocol: "rider", label: "Rider (RD)" },
   PS: { protocol: "phpstorm", label: "PhpStorm (PS)" },
@@ -6,72 +7,147 @@ const IDE_TYPES = {
   IJ: { protocol: "idea", label: "IntelliJ IDEA (IJ)" },
 };
 
+const GITHUB_DOMAIN = "github.com";
+const GITLAB_DOMAIN = "gitlab.com";
+
 const DEFAULT_CONFIG = {
-  gitlabDomain: "gitlab.xxx.com",
+  githubEnabled: true,
+  gitlabEnabled: true,
+  gitlabCustomDomain: "",
   projectsBasePath: "C:/Users/xxx/Desktop/_PROJECTS",
-  enabledIdes: ["WS", "RD"],
+  enabledIdes: ["VSC"],
 };
 
+const PRIMARY_IDE_KEYS = ["VSC", "WS"];
+const OTHER_IDE_KEYS = ["RD", "PS", "PC", "IJ"];
+
 const ideListEl = document.getElementById("ideList");
-const gitlabDomainEl = document.getElementById("gitlabDomain");
+const othersGroupEl = document.getElementById("othersGroup");
+const githubEnabledEl = document.getElementById("githubEnabled");
+const gitlabEnabledEl = document.getElementById("gitlabEnabled");
+const gitlabCustomDomainEl = document.getElementById("gitlabCustomDomain");
 const projectsBasePathEl = document.getElementById("projectsBasePath");
 const statusEl = document.getElementById("status");
 
+function createIdeChip(key, enabledIdes) {
+  const ide = IDE_TYPES[key];
+  const label = document.createElement("label");
+  label.className = "ide-chip";
+
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.value = key;
+  checkbox.checked = enabledIdes.includes(key);
+
+  const span = document.createElement("span");
+  span.textContent = ide.label;
+
+  label.appendChild(checkbox);
+  label.appendChild(span);
+  return label;
+}
+
 function renderIdeCheckboxes(enabledIdes) {
   ideListEl.innerHTML = "";
-  Object.entries(IDE_TYPES).forEach(([key, ide]) => {
-    const label = document.createElement("label");
-    label.className = "ide-chip";
+  othersGroupEl.innerHTML = "";
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.value = key;
-    checkbox.checked = enabledIdes.includes(key);
+  PRIMARY_IDE_KEYS.forEach((key) => ideListEl.appendChild(createIdeChip(key, enabledIdes)));
 
-    const span = document.createElement("span");
-    span.textContent = ide.label;
+  const othersToggle = document.createElement("button");
+  othersToggle.type = "button";
+  othersToggle.className = "ide-chip-toggle";
+  othersToggle.id = "othersToggle";
+  ideListEl.appendChild(othersToggle);
 
-    label.appendChild(checkbox);
-    label.appendChild(span);
-    ideListEl.appendChild(label);
+  OTHER_IDE_KEYS.forEach((key) => othersGroupEl.appendChild(createIdeChip(key, enabledIdes)));
+
+  const anyOtherEnabled = OTHER_IDE_KEYS.some((key) => enabledIdes.includes(key));
+  setOthersExpanded(anyOtherEnabled);
+
+  othersToggle.addEventListener("click", () => {
+    setOthersExpanded(othersGroupEl.style.display === "none");
   });
 }
 
+function setOthersExpanded(expanded) {
+  othersGroupEl.style.display = expanded ? "flex" : "none";
+  const othersToggle = document.getElementById("othersToggle");
+  othersToggle.textContent = "Others";
+  othersToggle.classList.toggle("expanded", expanded);
+}
+
 function getSelectedIdes() {
-  return Array.from(ideListEl.querySelectorAll("input[type=checkbox]:checked")).map(
-    (cb) => cb.value
-  );
+  return Array.from(
+    document.querySelectorAll("#ideList input[type=checkbox]:checked, #othersGroup input[type=checkbox]:checked")
+  ).map((cb) => cb.value);
+}
+
+function normalizeDomainInput(value) {
+  if (!value) return "";
+  let domain = value.trim();
+  // Strip protocol (http://, https://, or a bare "//").
+  domain = domain.replace(/^[a-z][a-z0-9+.-]*:\/\//i, "").replace(/^\/\//, "");
+  // Drop any path/query/hash and trailing slashes, keep just host[:port].
+  domain = domain.split(/[/?#]/)[0];
+  // Drop trailing dot and any accidental whitespace.
+  domain = domain.replace(/\.$/, "").trim();
+  return domain;
 }
 
 async function load() {
   const config = await chrome.storage.sync.get(DEFAULT_CONFIG);
-  gitlabDomainEl.value = config.gitlabDomain;
+  githubEnabledEl.checked = config.githubEnabled;
+  gitlabEnabledEl.checked = config.gitlabEnabled;
+  gitlabCustomDomainEl.value = normalizeDomainInput(config.gitlabCustomDomain);
   projectsBasePathEl.value = config.projectsBasePath;
   renderIdeCheckboxes(config.enabledIdes);
 }
 
+gitlabCustomDomainEl.addEventListener("blur", () => {
+  gitlabCustomDomainEl.value = normalizeDomainInput(gitlabCustomDomainEl.value);
+});
+
 async function save() {
-  const gitlabDomain = gitlabDomainEl.value.trim();
+  const githubEnabled = githubEnabledEl.checked;
+  const gitlabEnabled = gitlabEnabledEl.checked;
+  const gitlabCustomDomain = normalizeDomainInput(gitlabCustomDomainEl.value);
+  gitlabCustomDomainEl.value = gitlabCustomDomain;
   const projectsBasePath = projectsBasePathEl.value.trim();
   const enabledIdes = getSelectedIdes();
 
-  if (!gitlabDomain) {
-    setStatus("Please enter a GitLab domain.", "error");
+  const domains = [
+    githubEnabled ? GITHUB_DOMAIN : null,
+    gitlabEnabled ? GITLAB_DOMAIN : null,
+    gitlabCustomDomain || null,
+  ].filter(Boolean);
+
+  if (domains.length === 0) {
+    setStatus("Please enable at least one site (GitHub and/or GitLab).", "error");
     return;
   }
 
-  const origin = `*://${gitlabDomain}/*`;
-  const granted = await chrome.permissions.request({ origins: [origin] });
-  if (!granted) {
-    setStatus("Permission denied — the extension needs access to your GitLab domain to work.", "error");
-    return;
+  // github.com/gitlab.com are already granted via static host_permissions in
+  // the manifest — only the optional custom GitLab domain needs a runtime
+  // permission request.
+  if (gitlabCustomDomain) {
+    const granted = await chrome.permissions.request({ origins: [`*://${gitlabCustomDomain}/*`] });
+    if (!granted) {
+      setStatus("Permission denied — the extension needs access to this domain to work.", "error");
+      return;
+    }
   }
 
-  await chrome.storage.sync.set({ gitlabDomain, projectsBasePath, enabledIdes });
+  await chrome.storage.sync.set({
+    githubEnabled,
+    gitlabEnabled,
+    gitlabCustomDomain,
+    projectsBasePath,
+    enabledIdes,
+  });
 
-  await chrome.runtime.sendMessage({ type: "reregister-content-script", domain: gitlabDomain });
+  await chrome.runtime.sendMessage({ type: "reregister-content-script", domains });
 
-  setStatus("✓ Saved. Reload any open GitLab tabs to apply changes.", "success");
+  setStatus("✓ Saved. Reload any open GitLab/GitHub tabs to apply changes.", "success");
 }
 
 function setStatus(message, type) {

@@ -90,10 +90,48 @@
       font-size: 10.5px;
     }
 
+    .site-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .site-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card);
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 13px;
+      color: var(--ink);
+      transition: border-color 0.15s;
+    }
+
+    .site-toggle:hover {
+      border-color: var(--accent);
+    }
+
+    .site-toggle input {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .site-toggle small {
+      color: var(--muted);
+      font-weight: 400;
+    }
+
     .ide-list {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+      row-gap: 0px;
     }
 
     .ide-chip {
@@ -110,11 +148,13 @@
     .ide-chip span {
       display: inline-flex;
       align-items: center;
-      padding: 7px 12px;
+      box-sizing: border-box;
+      padding: 5px 12px;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: var(--card);
       font-size: 12.5px;
+      line-height: 1;
       font-weight: 500;
       color: var(--muted);
       cursor: pointer;
@@ -131,6 +171,43 @@
 
     .ide-chip span:hover {
       border-color: var(--accent);
+    }
+
+    .ide-chip-toggle {
+      -webkit-appearance: none;
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-sizing: border-box;
+      margin-bottom: 6px;
+      padding: 3px 12px;
+      border-radius: 999px;
+      border: 1px dashed var(--border);
+      background: transparent;
+      font-family: inherit;
+      font-size: 12.5px;
+      line-height: 1;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+
+    .ide-chip-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .ide-chip-toggle.expanded {
+      border-style: solid;
+      color: var(--ink);
+    }
+    }
+
+    .others-group {
+      margin-top: 8px;
     }
 
     button#save {
@@ -174,9 +251,23 @@
 
   <main>
     <div class="field">
-      <label for="gitlabDomain">GitLab domain</label>
-      <input type="text" id="gitlabDomain" placeholder="gitlab.xxx.com" />
-      <div class="hint">Host only, e.g. <code>gitlab.mycompany.com</code> (no https://).</div>
+      <label>Enabled sites</label>
+      <div class="site-list">
+        <label class="site-toggle">
+          <input type="checkbox" id="githubEnabled" />
+          <span>GitHub <small>(github.com)</small></span>
+        </label>
+        <label class="site-toggle">
+          <input type="checkbox" id="gitlabEnabled" />
+          <span>GitLab <small>(gitlab.com)</small></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="gitlabCustomDomain">Custom GitLab domain (optional)</label>
+      <input type="text" id="gitlabCustomDomain" placeholder="gitlab.mycompany.com" />
+      <div class="hint">For a self-hosted/Enterprise GitLab instance. Leave blank if you only use gitlab.com above.</div>
     </div>
 
     <div class="field">
@@ -188,6 +279,7 @@
     <div class="field">
       <label>Enabled IDE buttons</label>
       <div class="ide-list" id="ideList"></div>
+      <div class="ide-list others-group" id="othersGroup"></div>
     </div>
 
     <button id="save">Save changes</button>

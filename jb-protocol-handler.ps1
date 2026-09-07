@@ -1,14 +1,18 @@
 
 param([string]$Url)
 
-# jb:// url handler for JetBrains IDEs (WebStorm, Rider, PhpStorm, PyCharm, IDEA, ...)
+# jb:// url handler for JetBrains IDEs (WebStorm, Rider, PhpStorm, PyCharm, IDEA) and VS Code
 # Expected URL format:
 #   jb://open?ide=webstorm&path=C:/Users/yourname/Projects/management-service&repo=git%40gitlab.xxx.com%3Amanagement%2Fmanagement-service.git
 #   jb://open?ide=rider&path=C:/Users/yourname/Projects/some-dotnet-service&repo=git%40gitlab.xxx.com%3Ateam%2Fsome-dotnet-service.git
+#   jb://open?ide=vscode&path=C:/Users/yourname/Projects/some-service&repo=git%40github.com%3Aorg%2Fsome-service.git
 #
 # Behavior:
 #   - If the local "path" folder exists -> open it directly in the target IDE (e.g. webstorm64.exe <path>)
-#   - If it does not exist -> fall back to the official jetbrains://<ide>/checkout/git clone dialog using "repo"
+#   - If it does not exist -> clone it, then open it:
+#       - JetBrains IDEs: hand off to the official jetbrains://<ide>/checkout/git clone dialog
+#       - VS Code: this script runs "git clone" itself (via git.exe in PATH), then launches
+#         VS Code on the resulting folder — no second custom protocol involved
 #   - "ide" defaults to "webstorm" if omitted, for backward compatibility with older links
 
 # ---------------------------------------------------------------------------
@@ -21,6 +25,7 @@ $RiderExePath     = ""
 $PhpStormExePath  = ""
 $PyCharmExePath   = ""
 $IdeaExePath      = ""
+$VsCodeExePath    = ""
 
 function Decode([string]$s) {
     if ([string]::IsNullOrEmpty($s)) { return $s }
@@ -90,6 +95,19 @@ $ideMap = @{
         FallbackCommand = "idea"
         RequiredPlugin = "Git4Idea"
     }
+    "vscode" = @{
+        # VS Code isn't a JetBrains IDE and has no equivalent built-in
+        # "clone dialog" deep link we want to depend on here. Instead, the
+        # clone itself is performed directly by this script (see CloneMethod
+        # below), keeping jb:// as the only custom protocol involved.
+        ExePaths = @(
+            $VsCodeExePath,
+            "C:\Program Files\Microsoft VS Code\Code.exe",
+            (Join-Path $localAppData "Programs\Microsoft VS Code\Code.exe")
+        )
+        FallbackCommand = "code"
+        CloneMethod = "git"
+    }
 }
 
 if (-Not $ideMap.ContainsKey($ide)) {
@@ -109,9 +127,34 @@ if ($path -and (Test-Path $path)) {
     Start-Process -FilePath $exePath -ArgumentList "`"$path`""
 }
 elseif ($repo) {
-    $encodedRepo = [System.Uri]::EscapeDataString($repo)
-    $cloneUrl = "jetbrains://$($ideConfig.Scheme)/checkout/git?idea.required.plugins.id=$($ideConfig.RequiredPlugin)&checkout.repo=$encodedRepo"
-    Start-Process $cloneUrl
+    if ($ideConfig.ContainsKey("CloneMethod") -and $ideConfig.CloneMethod -eq "git") {
+        # Clone directly with git.exe instead of depending on a second
+        # registered protocol (e.g. vscode://), then open the result.
+        if (-Not (Get-Command git -ErrorAction SilentlyContinue)) {
+            Add-Type -AssemblyName System.Windows.Forms
+            [System.Windows.Forms.MessageBox]::Show("Cannot clone '$repo': git.exe was not found in PATH. Install Git for Windows (https://git-scm.com/download/win), or clone the repo manually.")
+            exit
+        }
+
+        $parentDir = Split-Path -Path $path -Parent
+        if ($parentDir -and -Not (Test-Path $parentDir)) {
+            New-Item -Path $parentDir -ItemType Directory -Force | Out-Null
+        }
+
+        $cloneProcess = Start-Process -FilePath "git" -ArgumentList @("clone", $repo, $path) -Wait -NoNewWindow -PassThru
+        if ($cloneProcess.ExitCode -eq 0 -and (Test-Path $path)) {
+            Start-Process -FilePath $exePath -ArgumentList "`"$path`""
+        }
+        else {
+            Add-Type -AssemblyName System.Windows.Forms
+            [System.Windows.Forms.MessageBox]::Show("git clone failed for '$repo' (exit code $($cloneProcess.ExitCode)).")
+        }
+    }
+    else {
+        $encodedRepo = [System.Uri]::EscapeDataString($repo)
+        $cloneUrl = "jetbrains://$($ideConfig.Scheme)/checkout/git?idea.required.plugins.id=$($ideConfig.RequiredPlugin)&checkout.repo=$encodedRepo"
+        Start-Process $cloneUrl
+    }
 }
 else {
     Add-Type -AssemblyName System.Windows.Forms
