@@ -1,291 +1,298 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>GitLab JetBrains Opener — Settings</title>
-  <style>
-    :root {
-      --accent: #fc801d;
-      --accent-dark: #e06b0f;
-      --ink: #1f2328;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --bg: #f6f7f9;
-      --card: #ffffff;
-    }
+    <meta charset="UTF-8"/>
+    <title>GitLab JetBrains Opener — Settings</title>
+    <style>
+        :root {
+            --accent: #fc801d;
+            --accent-dark: #e06b0f;
+            --ink: #1f2328;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --bg: #f6f7f9;
+            --card: #ffffff;
+        }
 
-    * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
-      width: 360px;
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-    }
+        body {
+            font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+            width: 360px;
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+        }
 
-    header {
-      padding: 18px 20px 16px;
-      background: linear-gradient(135deg, #fc801d 0%, #e13a5e 100%);
-      color: #fff;
-    }
+        header {
+            padding: 18px 20px 16px;
+            background: linear-gradient(135deg, #fc801d 0%, #e13a5e 100%);
+            color: #fff;
+        }
 
-    header h1 {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-    }
+        header h1 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+        }
 
-    header p {
-      margin: 4px 0 0;
-      font-size: 11.5px;
-      opacity: 0.9;
-    }
+        header p {
+            margin: 4px 0 0;
+            font-size: 11.5px;
+            opacity: 0.9;
+        }
 
-    main {
-      padding: 16px 20px 20px;
-    }
+        main {
+            padding: 16px 20px 20px;
+        }
 
-    .field {
-      margin-bottom: 16px;
-    }
+        .field {
+            margin-bottom: 16px;
+        }
 
-    label {
-      display: block;
-      font-weight: 600;
-      font-size: 12.5px;
-      color: var(--ink);
-      margin-bottom: 6px;
-    }
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 12.5px;
+            color: var(--ink);
+            margin-bottom: 6px;
+        }
 
-    input[type="text"] {
-      width: 100%;
-      padding: 8px 10px;
-      font-size: 13px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--card);
-      color: var(--ink);
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--ink);
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
 
-    input[type="text"]:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(252, 128, 29, 0.15);
-    }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(252, 128, 29, 0.15);
+        }
 
-    .hint {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 5px;
-      line-height: 1.4;
-    }
+        .hint {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 5px;
+            line-height: 1.4;
+        }
 
-    .hint code {
-      background: #eef0f2;
-      padding: 1px 4px;
-      border-radius: 4px;
-      font-size: 10.5px;
-    }
+        .hint code {
+            background: #eef0f2;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-size: 10.5px;
+        }
 
-    .site-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+        .site-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-    .site-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--card);
-      cursor: pointer;
-      font-weight: 500;
-      font-size: 13px;
-      color: var(--ink);
-      transition: border-color 0.15s;
-    }
+        .site-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--ink);
+            transition: border-color 0.15s;
+        }
 
-    .site-toggle:hover {
-      border-color: var(--accent);
-    }
+        .site-toggle:hover {
+            border-color: var(--accent);
+        }
 
-    .site-toggle input {
-      width: 15px;
-      height: 15px;
-      accent-color: var(--accent);
-      cursor: pointer;
-    }
+        .site-toggle input {
+            width: 15px;
+            height: 15px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
 
-    .site-toggle small {
-      color: var(--muted);
-      font-weight: 400;
-    }
+        .site-toggle small {
+            color: var(--muted);
+            font-weight: 400;
+        }
 
-    .ide-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      row-gap: 0px;
-    }
+        .ide-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            row-gap: 0;
+        }
 
-    .ide-chip {
-      position: relative;
-    }
+        .ide-chip {
+            position: relative;
+        }
 
-    .ide-chip input {
-      position: absolute;
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
+        .ide-chip input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
 
-    .ide-chip span {
-      display: inline-flex;
-      align-items: center;
-      box-sizing: border-box;
-      padding: 5px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      font-size: 12.5px;
-      line-height: 1;
-      font-weight: 500;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.15s;
-      user-select: none;
-    }
+        .ide-chip span {
+            display: inline-flex;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 5px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            font-size: 12.5px;
+            line-height: 1;
+            font-weight: 500;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+        }
 
-    .ide-chip input:checked + span {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-      font-weight: 600;
-    }
+        .ide-chip input:checked + span {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            font-weight: 600;
+        }
 
-    .ide-chip span:hover {
-      border-color: var(--accent);
-    }
+        .ide-chip span:hover {
+            border-color: var(--accent);
+        }
 
-    .ide-chip-toggle {
-      -webkit-appearance: none;
-      appearance: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      box-sizing: border-box;
-      margin-bottom: 6px;
-      padding: 3px 12px;
-      border-radius: 999px;
-      border: 1px dashed var(--border);
-      background: transparent;
-      font-family: inherit;
-      font-size: 12.5px;
-      line-height: 1;
-      font-weight: 500;
-      color: var(--muted);
-      cursor: pointer;
-      user-select: none;
-      transition: all 0.15s;
-    }
+        .ide-chip-toggle {
+            -webkit-appearance: none;
+            appearance: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-sizing: border-box;
+            margin-bottom: 6px;
+            padding: 3px 12px;
+            border-radius: 999px;
+            border: 1px dashed var(--border);
+            background: transparent;
+            font-family: inherit;
+            font-size: 12.5px;
+            line-height: 1;
+            font-weight: 500;
+            color: var(--muted);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s;
+        }
 
-    .ide-chip-toggle:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
+        .ide-chip-toggle:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
 
-    .ide-chip-toggle.expanded {
-      border-style: solid;
-      color: var(--ink);
-    }
-    }
+        .ide-chip-toggle.expanded {
+            border-style: solid;
+            color: var(--ink);
+        }
 
-    .others-group {
-      margin-top: 8px;
-    }
 
-    button#save {
-      width: 100%;
-      margin-top: 4px;
-      padding: 10px 14px;
-      font-size: 13.5px;
-      font-weight: 600;
-      color: #fff;
-      background: var(--accent);
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.05s;
-    }
+        .others-group {
+            margin-top: 8px;
+        }
 
-    button#save:hover {
-      background: var(--accent-dark);
-    }
+        button#save {
+            width: 100%;
+            margin-top: 4px;
+            padding: 10px 14px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #fff;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.05s;
+        }
 
-    button#save:active {
-      transform: scale(0.98);
-    }
+        button#save:hover {
+            background: var(--accent-dark);
+        }
 
-    #status {
-      margin-top: 10px;
-      font-size: 12px;
-      line-height: 1.4;
-      min-height: 16px;
-    }
+        button#save:active {
+            transform: scale(0.98);
+        }
 
-    #status.success { color: #1a7f37; }
-    #status.error { color: #cf222e; }
-  </style>
+        #status {
+            margin-top: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+            min-height: 16px;
+        }
+
+        #status.success {
+            color: #1a7f37;
+        }
+
+        #status.error {
+            color: #cf222e;
+        }
+    </style>
 </head>
 <body>
-  <header>
+<header>
     <h1>GitLab JetBrains Opener</h1>
     <p>Open GitLab projects directly in your JetBrains IDE</p>
-  </header>
+</header>
 
-  <main>
+<main>
     <div class="field">
-      <label>Enabled sites</label>
-      <div class="site-list">
-        <label class="site-toggle">
-          <input type="checkbox" id="githubEnabled" />
-          <span>GitHub <small>(github.com)</small></span>
-        </label>
-        <label class="site-toggle">
-          <input type="checkbox" id="gitlabEnabled" />
-          <span>GitLab <small>(gitlab.com)</small></span>
-        </label>
-      </div>
+        <label>Enabled sites</label>
+        <div class="site-list">
+            <label class="site-toggle">
+                <input type="checkbox" id="githubEnabled"/>
+                <span>GitHub <small>(github.com)</small></span>
+            </label>
+            <label class="site-toggle">
+                <input type="checkbox" id="gitlabEnabled"/>
+                <span>GitLab <small>(gitlab.com)</small></span>
+            </label>
+        </div>
     </div>
 
     <div class="field">
-      <label for="gitlabCustomDomain">Custom GitLab domain (optional)</label>
-      <input type="text" id="gitlabCustomDomain" placeholder="gitlab.mycompany.com" />
-      <div class="hint">For a self-hosted/Enterprise GitLab instance. Leave blank if you only use gitlab.com above.</div>
+        <label for="gitlabCustomDomain">Custom GitLab domain (optional)</label>
+        <input type="text" id="gitlabCustomDomain" placeholder="gitlab.mycompany.com"/>
+        <div class="hint">For a self-hosted/Enterprise GitLab instance. Leave blank if you only use gitlab.com above.</div>
     </div>
 
     <div class="field">
-      <label for="projectsBasePath">Projects root directory</label>
-      <input type="text" id="projectsBasePath" placeholder="C:/Users/you/Projects" />
-      <div class="hint">Local folder where checked-out projects live (forward slashes).</div>
+        <label for="projectsBasePath">Projects root directory</label>
+        <input type="text" id="projectsBasePath" placeholder="C:/Users/you/Projects"/>
+        <div class="hint">Local folder where checked-out projects live (forward slashes).</div>
     </div>
 
     <div class="field">
-      <label>Enabled IDE buttons</label>
-      <div class="ide-list" id="ideList"></div>
-      <div class="ide-list others-group" id="othersGroup"></div>
+        <label>Enabled IDE buttons</label>
+        <div class="ide-list" id="ideList"></div>
+        <div class="ide-list others-group" id="othersGroup"></div>
     </div>
 
     <button id="save">Save changes</button>
     <div id="status"></div>
-  </main>
+</main>
 
-  <script src="options.js"></script>
+<script src="options.js"></script>
 </body>
 </html>

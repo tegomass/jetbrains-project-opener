@@ -38,6 +38,7 @@ function createIdeChip(key, enabledIdes) {
   checkbox.type = "checkbox";
   checkbox.value = key;
   checkbox.checked = enabledIdes.includes(key);
+  checkbox.addEventListener("change", save);
 
   const span = document.createElement("span");
   span.textContent = ide.label;
@@ -105,7 +106,24 @@ async function load() {
 
 gitlabCustomDomainEl.addEventListener("blur", () => {
   gitlabCustomDomainEl.value = normalizeDomainInput(gitlabCustomDomainEl.value);
+  save();
 });
+
+githubEnabledEl.addEventListener("change", save);
+gitlabEnabledEl.addEventListener("change", save);
+
+// Debounce the free-text base path field so we don't save on every
+// keystroke, but still auto-save shortly after the user stops typing —
+// no explicit "Save changes" click required.
+function debounce(fn, delayMs) {
+  let timer = null;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delayMs);
+  };
+}
+
+projectsBasePathEl.addEventListener("input", debounce(save, 600));
 
 async function save() {
   const githubEnabled = githubEnabledEl.checked;
@@ -126,6 +144,19 @@ async function save() {
     return;
   }
 
+  // Persist settings before requesting the optional permission below: that
+  // request opens a native Chrome dialog which steals focus and can close
+  // this popup mid-flight, killing its JS context. Saving first means the
+  // typed values survive even if that happens, instead of resetting to
+  // whatever was last saved.
+  await chrome.storage.sync.set({
+    githubEnabled,
+    gitlabEnabled,
+    gitlabCustomDomain,
+    projectsBasePath,
+    enabledIdes,
+  });
+
   // github.com/gitlab.com are already granted via static host_permissions in
   // the manifest — only the optional custom GitLab domain needs a runtime
   // permission request.
@@ -136,14 +167,6 @@ async function save() {
       return;
     }
   }
-
-  await chrome.storage.sync.set({
-    githubEnabled,
-    gitlabEnabled,
-    gitlabCustomDomain,
-    projectsBasePath,
-    enabledIdes,
-  });
 
   await chrome.runtime.sendMessage({ type: "reregister-content-script", domains });
 
